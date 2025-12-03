@@ -1,4 +1,6 @@
-import 'dotenv/config';
+// dotenv not needed in Vercel - environment variables are automatically available
+// import 'dotenv/config'; // Removed for Vercel deployment
+
 import multer from 'multer';
 import { runWasteDetection, isDetectionReady } from '../backend/src/services/detectionService.js';
 import { runHighAccuracyDetection, isOpenAIConfigured } from '../backend/src/services/openaiService.js';
@@ -44,6 +46,8 @@ export default async (req, res) => {
   }
 
   try {
+    console.log(`[API] ${req.method} ${req.url}`);
+    console.log(`[API] Content-Type: ${req.headers['content-type']}`);
     // Handle GET /status endpoint
     if (req.method === 'GET') {
       const yoloReady = isDetectionReady();
