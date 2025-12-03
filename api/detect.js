@@ -176,12 +176,15 @@ export default async (req, res) => {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    console.error('[Detect] Unexpected error:', error.message);
-    console.error('[Detect] Stack:', error.stack);
-
+    console.error('[API] Unexpected error:', error.message);
+    console.error('[API] Error stack:', error.stack);
+    console.error('[API] Error name:', error.name);
+    
+    // Return detailed error for debugging
     return res.status(500).json({
       success: false,
       error: error.message || 'Internal server error',
+      errorType: error.name || 'UnknownError',
       insights: [{
         detected_item: 'Error',
         type: 'Error',
