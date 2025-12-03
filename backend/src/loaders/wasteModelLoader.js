@@ -34,11 +34,33 @@ let modelLoadError = null;
 /**
  * Resolve the model path using __dirname
  * Path: backend/src/loaders -> backend/models
+ * Also handles Vercel serverless environment
  */
 function getModelPath() {
-  // From src/loaders/ go up to backend/, then into models/
-  const modelPath = path.join(__dirname, '..', '..', 'models', MODEL_FILENAME);
-  return modelPath;
+  // Try multiple possible paths for different environments
+  const possiblePaths = [
+    // Standard path: backend/src/loaders -> backend/models
+    path.join(__dirname, '..', '..', 'models', MODEL_FILENAME),
+    // Vercel serverless: api/detect.js -> backend/models
+    path.join(process.cwd(), 'backend', 'models', MODEL_FILENAME),
+    // Alternative: root/models
+    path.join(process.cwd(), 'models', MODEL_FILENAME),
+    // Absolute path from root
+    path.resolve(process.cwd(), 'backend', 'models', MODEL_FILENAME),
+  ];
+
+  // Try each path
+  for (const modelPath of possiblePaths) {
+    if (fs.existsSync(modelPath)) {
+      console.log(`[WasteModel] Found model at: ${modelPath}`);
+      return modelPath;
+    }
+  }
+
+  // Return the first path as default (will fail gracefully)
+  const defaultPath = path.join(__dirname, '..', '..', 'models', MODEL_FILENAME);
+  console.log(`[WasteModel] Using default path: ${defaultPath}`);
+  return defaultPath;
 }
 
 /**

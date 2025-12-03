@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { Router } from 'express';
 import multer from 'multer';
 import { runWasteDetection, isDetectionReady } from '../backend/src/services/detectionService.js';
 import { runHighAccuracyDetection, isOpenAIConfigured } from '../backend/src/services/openaiService.js';
@@ -9,10 +8,10 @@ import { WASTE_CLASSES } from '../backend/src/loaders/wasteModelLoader.js';
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit for Vercel
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (file && file.mimetype && file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
       cb(new Error('Only image files are allowed'), false);
@@ -20,78 +19,168 @@ const upload = multer({
   },
 });
 
-const router = Router();
-
-// POST /api/detect
-router.post('/', upload.single('image'), async (req, res) => {
-  console.log('[Detect] Input received');
-
-  const base64Payload = req.body?.image?.trim?.();
-  const uploadedFile = req.file?.buffer;
-  const mode = req.body?.mode || 'standard';
-
-  console.log(`[Detect] Mode: ${mode}`);
-
-  if (!base64Payload && !uploadedFile) {
-    console.log('[Detect] No image payload provided');
-    return res.status(400).json({
-      success: false,
-      error: 'Missing image payload. Provide a base64 string in `image` field or upload a file.',
-      insights: [],
+// Helper to parse multipart form data
+async function parseMultipart(req) {
+  return new Promise((resolve, reject) => {
+    upload.single('image')(req, {}, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(req);
+      }
     });
-  }
+  });
+}
 
-  let inputImage;
-  if (base64Payload) {
-    console.log('[Detect] Using base64 input');
-    inputImage = base64Payload;
-  } else {
-    console.log('[Detect] Using uploaded file buffer');
-    inputImage = uploadedFile;
+// Vercel serverless function handler
+export default async (req, res) => {
+  // Add CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
   try {
-    let result;
-    let modelUsed;
-
-    if (mode === 'high-accuracy') {
-      console.log('[Detect] Using GPT-4 Vision (high-accuracy mode)');
-      let imageForGPT = inputImage;
-      if (Buffer.isBuffer(inputImage)) {
-        imageForGPT = `data:image/jpeg;base64,${inputImage.toString('base64')}`;
-      }
-      result = await runHighAccuracyDetection(imageForGPT);
-      modelUsed = 'gpt-4o-vision';
-    } else {
-      console.log('[Detect] Using ONNX model (standard mode)');
-      result = await runWasteDetection(inputImage);
-      modelUsed = 'yolov8-waste-onnx';
+    // Handle GET /status endpoint
+    if (req.method === 'GET') {
+      const yoloReady = isDetectionReady();
+      const openaiReady = isOpenAIConfigured();
+      
+      return res.json({
+        modes: {
+          standard: {
+            model: 'yolov8-waste-onnx',
+            ready: yoloReady,
+            description: 'Fast local detection using YOLOv8',
+          },
+          'high-accuracy': {
+            model: 'gpt-4o-vision',
+            ready: openaiReady,
+            description: 'Detailed analysis with GPT-4 Vision + reduce/reuse/recycle tips',
+          },
+        },
+        defaultMode: 'standard',
+        ready: yoloReady,
+        highAccuracyAvailable: openaiReady,
+        classes: WASTE_CLASSES,
+        inputSize: 640,
+        confidenceThreshold: 0.25,
+        iouThreshold: 0.45,
+      });
     }
 
-    const { success, insights } = result;
+    // Handle POST /detect
+    if (req.method === 'POST') {
+      console.log('[Detect] Request received');
+      
+      let base64Payload;
+      let uploadedFile;
+      let mode = 'standard';
 
-    console.log('[Detect] Returning response');
+      // Check content type
+      const contentType = req.headers['content-type'] || '';
+      
+      if (contentType.includes('application/json')) {
+        // JSON body with base64 image
+        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        base64Payload = body?.image?.trim?.();
+        mode = body?.mode || 'standard';
+        console.log('[Detect] Using JSON body with base64');
+      } else if (contentType.includes('multipart/form-data')) {
+        // Multipart form data
+        try {
+          await parseMultipart(req);
+          uploadedFile = req.file?.buffer;
+          mode = req.body?.mode || 'standard';
+          console.log('[Detect] Using multipart form data');
+        } catch (err) {
+          console.error('[Detect] Multipart parse error:', err.message);
+          return res.status(400).json({
+            success: false,
+            error: 'Failed to parse multipart form data',
+            insights: [],
+          });
+        }
+      } else {
+        // Try to parse as JSON anyway
+        try {
+          const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+          base64Payload = body?.image?.trim?.();
+          mode = body?.mode || 'standard';
+        } catch (err) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid request format. Send JSON with base64 image or multipart/form-data',
+            insights: [],
+          });
+        }
+      }
 
-    return res.json({
-      success,
-      model: modelUsed,
-      mode,
-      insights,
-      imageDimensions: result.imageDimensions,
-      count: insights.length,
-      status: insights[0]?.fallback ? 'fallback' : 'ok',
-    });
+      // Validate input
+      if (!base64Payload && !uploadedFile) {
+        console.log('[Detect] No image payload provided');
+        return res.status(400).json({
+          success: false,
+          error: 'Missing image payload. Provide a base64 string in `image` field or upload a file.',
+          insights: [],
+        });
+      }
+
+      console.log(`[Detect] Mode: ${mode}`);
+
+      let inputImage;
+      if (base64Payload) {
+        inputImage = base64Payload;
+      } else {
+        inputImage = uploadedFile;
+      }
+
+      let result;
+      let modelUsed;
+
+      if (mode === 'high-accuracy') {
+        console.log('[Detect] Using GPT-4 Vision (high-accuracy mode)');
+        let imageForGPT = inputImage;
+        if (Buffer.isBuffer(inputImage)) {
+          imageForGPT = `data:image/jpeg;base64,${inputImage.toString('base64')}`;
+        }
+        result = await runHighAccuracyDetection(imageForGPT);
+        modelUsed = 'gpt-4o-vision';
+      } else {
+        console.log('[Detect] Using ONNX model (standard mode)');
+        result = await runWasteDetection(inputImage);
+        modelUsed = 'yolov8-waste-onnx';
+      }
+
+      const { success, insights } = result;
+
+      console.log('[Detect] Returning response');
+
+      return res.json({
+        success,
+        model: modelUsed,
+        mode,
+        insights,
+        imageDimensions: result.imageDimensions,
+        count: insights.length,
+        status: insights[0]?.fallback ? 'fallback' : 'ok',
+      });
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('[Detect] Unexpected error:', error.message);
-    console.log('[Detect] Returning response');
+    console.error('[Detect] Stack:', error.stack);
 
-    return res.status(200).json({
+    return res.status(500).json({
       success: false,
-      model: mode === 'high-accuracy' ? 'gpt-4o-vision' : 'yolov8-waste-onnx',
-      mode,
+      error: error.message || 'Internal server error',
       insights: [{
-        detected_item: 'Unknown',
-        type: 'Unknown',
+        detected_item: 'Error',
+        type: 'Error',
         confidence: 0,
         bbox: [],
         reduce: [],
@@ -104,79 +193,4 @@ router.post('/', upload.single('image'), async (req, res) => {
       status: 'error',
     });
   }
-});
-
-// GET /api/detect/status
-router.get('/status', async (req, res) => {
-  const yoloReady = isDetectionReady();
-  const openaiReady = isOpenAIConfigured();
-
-  return res.json({
-    modes: {
-      standard: {
-        model: 'yolov8-waste-onnx',
-        ready: yoloReady,
-        description: 'Fast local detection using YOLOv8',
-      },
-      'high-accuracy': {
-        model: 'gpt-4o-vision',
-        ready: openaiReady,
-        description: 'Detailed analysis with GPT-4 Vision + reduce/reuse/recycle tips',
-      },
-    },
-    defaultMode: 'standard',
-    ready: yoloReady,
-    highAccuracyAvailable: openaiReady,
-    classes: WASTE_CLASSES,
-    inputSize: 640,
-    confidenceThreshold: 0.25,
-    iouThreshold: 0.45,
-  });
-});
-
-// Vercel serverless function handler
-export default async (req, res) => {
-  // Add CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  // Handle /status endpoint
-  if (req.method === 'GET' && (req.url === '/status' || req.url === '/detect/status' || req.url.endsWith('/status'))) {
-    const yoloReady = isDetectionReady();
-    const openaiReady = isOpenAIConfigured();
-    return res.json({
-      modes: {
-        standard: {
-          model: 'yolov8-waste-onnx',
-          ready: yoloReady,
-          description: 'Fast local detection using YOLOv8',
-        },
-        'high-accuracy': {
-          model: 'gpt-4o-vision',
-          ready: openaiReady,
-          description: 'Detailed analysis with GPT-4 Vision + reduce/reuse/recycle tips',
-        },
-      },
-      defaultMode: 'standard',
-      ready: yoloReady,
-      highAccuracyAvailable: openaiReady,
-      classes: WASTE_CLASSES,
-      inputSize: 640,
-      confidenceThreshold: 0.25,
-      iouThreshold: 0.45,
-    });
-  }
-
-  // Handle POST /detect
-  if (req.method === 'POST') {
-    return router.handle(req, res);
-  }
-
-  return res.status(405).json({ error: 'Method not allowed' });
 };
-
