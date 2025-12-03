@@ -46,6 +46,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globIgnores: [
+          '**/node_modules/**/*',
+          '**/dev-dist/**/*',
+          '**/.vite/**/*',
+          'sw.js',
+          'workbox-*.js',
+        ],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
