@@ -1,0 +1,33 @@
+{
+  "name": "ecovision-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run generate-icons && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext js,jsx --max-warnings=0",
+    "generate-icons": "node scripts/generate-icons.js",
+    "vercel-build": "npm run build"
+  },
+  "dependencies": {
+    "ecovision": "file:..",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.2",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react": "^7.34.3",
+    "postcss": "^8.4.45",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.15",
+    "vite": "^5.2.11",
+    "vite-plugin-pwa": "^1.2.0",
+    "workbox-window": "^7.4.0"
+  }
+}

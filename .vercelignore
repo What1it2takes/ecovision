@@ -1,0 +1,34 @@
+# Development files
+node_modules/
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+frontend/dist/
+frontend/.vite/
+backend/dist/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Training data (not needed for deployment)
+YOLO-Waste-Detection/
+
+# Temporary files
+*.tmp
+*.temp
+

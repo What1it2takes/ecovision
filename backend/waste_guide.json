@@ -1,0 +1,192 @@
+{
+  "plastic bottle": {
+    "type": "Plastic",
+    "dispose": "Empty, rinse thoroughly, flatten to save space, and place PET bottles in your mixed recycling stream. Caps can usually stay on—verify with local guidance.",
+    "reduce": [
+      "Carry a durable stainless-steel or glass reusable bottle to avoid impulse purchases.",
+      "Refill from public hydration stations or office water dispensers whenever possible.",
+      "Choose family-sized containers and decant into smaller reusable bottles at home.",
+      "Support brands that operate circular packaging or bottle-deposit programs.",
+      "Keep a spare reusable bottle in your bag or car to curb single-use cravings."
+    ],
+    "reuse": [
+      "Cut and turn bottles into propagation stations for herbs and houseplants.",
+      "Create DIY watering globes for potted plants while traveling.",
+      "Use cleaned bottles as lightweight storage for dry goods on camping trips.",
+      "Transform into bird feeders by adding dowels and seed ports.",
+      "Craft LED lanterns or fairy-light diffusers for outdoor gatherings."
+    ],
+    "recycle_ideas": [
+      "Shred and weave strips into colorful baskets or desk organizers.",
+      "Heat-form flattened bottles into durable plant labels.",
+      "Create modular wall art by painting and linking bottle bases.",
+      "Build vertical garden towers by stacking bottle planters.",
+      "Use bottle caps for mosaic projects or as counters for educational games."
+    ],
+    "environmental_impact": "PET plastic production relies on fossil fuels, emits greenhouse gases, and can take centuries to break down. Mismanaged bottles fragment into microplastics that harm marine life and enter food chains.",
+    "local_rules": "Most municipalities accept PET #1 bottles in curbside recycling. Keep them empty, lightly crushed, and free of liquids. Avoid mixing with PVC or PLA plastics, and follow deposit-return schemes where available."
+  },
+  "glass bottle": {
+    "type": "Glass",
+    "dispose": "Remove lids, give the bottle a quick rinse, and place it in a color-sorted glass bank or mixed recycling bin if your program allows commingled glass.",
+    "reduce": [
+      "Favor beverages sold in refillable or returnable glass containers.",
+      "Purchase concentrates or syrups that dilute into many servings per bottle.",
+      "Support zero-waste shops offering bulk items in deposit jars.",
+      "Invest in countertop soda or water carbonators to skip bottled drinks.",
+      "Share large-format bottles at gatherings instead of multiple single-serve portions."
+    ],
+    "reuse": [
+      "Convert bottles into table lamps or pendant lights with DIY kits.",
+      "Use as elegant storage for homemade oils, dressings, or infused spirits.",
+      "Label and repurpose as pantry jars for grains, beans, or dried fruit.",
+      "Create outdoor tiki torches by filling with citronella oil and wicks.",
+      "Turn stout bottles into rolling pins or pastry weights."
+    ],
+    "recycle_ideas": [
+      "Tumble glass shards to create sea-glass style mosaics.",
+      "Slice bottles into rings for wind chimes or jewelry.",
+      "Sand down edges to craft drinking glasses or candle holders.",
+      "Use crushed glass as reflective mulch in succulent planters.",
+      "Embed glass chips in concrete stepping stones for garden art."
+    ],
+    "environmental_impact": "Glass is infinitely recyclable without quality loss, but producing virgin glass is energy-intensive. Recycling significantly decreases energy use and raw material extraction.",
+    "local_rules": "Deposit schemes may refund a small fee per bottle. Separate by color if your facility requires it, and avoid mixing ceramics or Pyrex, which melt at different temperatures."
+  },
+  "metal can": {
+    "type": "Metal",
+    "dispose": "Rinse the can, remove sharp lids, and place it in metal recycling. Crushing is optional but helps save bin space.",
+    "reduce": [
+      "Cook from fresh or frozen ingredients to minimize reliance on canned goods.",
+      "Buy bulk-sized cans only when you can finish contents before spoilage.",
+      "Choose beverages in refillable growlers or kegs instead of single-use cans.",
+      "Plan meals to avoid multiple small cans of similar ingredients.",
+      "Support brands packaging in lightweight, recycled-content aluminum."
+    ],
+    "reuse": [
+      "Turn cans into rustic utensil caddies with twine and labels.",
+      "Punch patterned holes to create candle lanterns or luminaries.",
+      "Use as planters for herbs, ensuring drainage holes at the base.",
+      "Flatten and cut into decorative garden markers.",
+      "Upcycle large cans into countertop compost crocks with charcoal filters."
+    ],
+    "recycle_ideas": [
+      "Strip paint and craft metal tiles for wall art or backsplashes.",
+      "Make percussion instruments for music education workshops.",
+      "Cut and emboss thin sheets into holiday ornaments.",
+      "Fashion can tabs into bracelets or bag embellishments.",
+      "Use thick cans to create rocket-stove components for outdoor cooking."
+    ],
+    "environmental_impact": "Aluminum and steel are highly recyclable, and reprocessing them saves up to 95% of the energy compared to mining new ore. Landfilled metal slowly oxidizes and wastes valuable resources.",
+    "local_rules": "Most curbside programs accept steel and aluminum cans together. Keep them empty, avoid mixing with aerosol cans unless fully depressurized, and leave paper labels on—they burn off during smelting."
+  },
+  "paper": {
+    "type": "Paper",
+    "dispose": "Keep paper clean and dry, stack or bundle it, and place it in your paper recycling bin. Remove contaminants such as plastic windows where required.",
+    "reduce": [
+      "Opt into digital billing, ticketing, and note-taking platforms.",
+      "Print only when necessary and default to double-sided settings.",
+      "Use cloth napkins, towels, and handkerchiefs in place of disposables.",
+      "Borrow or share books and magazines via libraries or community shelves.",
+      "Choose products with minimal packaging or certified recycled content."
+    ],
+    "reuse": [
+      "Shred sensitive documents for compost carbon or pet bedding.",
+      "Fold scrap paper into memo pads or grocery lists.",
+      "Use newspaper as protective wrap when moving or shipping fragile items.",
+      "Create papier-mâché art, masks, or plantable seed paper.",
+      "Line pet cages or litter boxes with layered newsprint."
+    ],
+    "recycle_ideas": [
+      "Blend shredded paper with flour glue to mold decorative bowls.",
+      "Press handmade paper sheets embedded with seeds for gifts.",
+      "Create origami garlands or seasonal decorations.",
+      "Layer paper bricks with clay for lightweight insulating blocks.",
+      "Weave magazine strips into baskets or coasters."
+    ],
+    "environmental_impact": "Paper production drives deforestation, consumes water, and requires bleaching chemicals. Recycling paper reduces tree harvesting and cuts landfill methane emissions.",
+    "local_rules": "Accepted grades typically include newspapers, office paper, and magazines. Keep pizza boxes or food-soiled paper out of recycling streams unless your city composts them."
+  },
+  "cardboard": {
+    "type": "Paperboard",
+    "dispose": "Flatten boxes, remove tape or plastic inserts when practical, and keep them dry before placing in recycling or reuse programs.",
+    "reduce": [
+      "Consolidate online orders to fewer shipments or choose in-store pickup.",
+      "Support retailers that offer reusable delivery totes or returnable crates.",
+      "Decline oversized boxes for small items when offered alternate packaging.",
+      "Store seasonal decor or clothing in durable bins instead of new boxes.",
+      "Coordinate neighborhood sharing of moving boxes to extend their life."
+    ],
+    "reuse": [
+      "Layer cardboard as a weed-suppressing sheet mulch in gardens.",
+      "Cut pieces into drawer dividers or closet organizers.",
+      "Create costume armor or play structures for children.",
+      "Use thick panels as protective surfaces for art and DIY projects.",
+      "Build cat scratchers or pet forts from stacked corrugated sheets."
+    ],
+    "recycle_ideas": [
+      "Paint and hinge panels into lightweight photo backdrops.",
+      "Carve relief art or signage using laser cutters or craft knives.",
+      "Laminate layers with eco-friendly glue to build small furniture prototypes.",
+      "Cut hexagons to assemble geodesic domes for classroom demonstrations.",
+      "Shred and mix with compost to add carbon-rich bulking material."
+    ],
+    "environmental_impact": "Cardboard manufacturing requires pulp, water, and energy; recycling significantly reduces virgin fiber demand and keeps bulky material out of landfills.",
+    "local_rules": "Most curbside programs take corrugated cardboard and paperboard. Avoid waxed or heavily soiled boxes unless your municipality composts them. Tie bundles if requested."
+  },
+  "organic waste": {
+    "type": "Organic",
+    "dispose": "Collect food scraps, coffee grounds, and yard clippings for backyard composting or municipal organics bins. Keep animal protein separate if your program disallows it.",
+    "reduce": [
+      "Plan meals and shopping lists to match actual consumption patterns.",
+      "Store produce properly using breathable bags and moisture control.",
+      "Batch-cook and freeze leftovers to extend shelf life.",
+      "Embrace root-to-stem cooking by using greens, peels, and stems.",
+      "Donate unopened pantry items before they expire."
+    ],
+    "reuse": [
+      "Simmer vegetable trimmings into stock before composting.",
+      "Dry citrus peels for natural cleaners or potpourri.",
+      "Regrow scallions, lettuce, or celery from kitchen scraps.",
+      "Feed suitable scraps to backyard chickens or worm bins.",
+      "Use coffee grounds as gentle exfoliants or garden pest deterrents."
+    ],
+    "recycle_ideas": [
+      "Create bokashi buckets for fermenting food waste in small spaces.",
+      "Build worm composting towers for apartment balconies.",
+      "Layer lasagna gardens with alternating greens and browns.",
+      "Produce bioenzymes by fermenting fruit peels with sugar.",
+      "Craft seedling starter pots from compressed compost and shredded paper."
+    ],
+    "environmental_impact": "When organic matter decomposes anaerobically in landfills, it generates methane, a potent greenhouse gas. Composting returns nutrients to soil, improves water retention, and stores carbon.",
+    "local_rules": "Many cities provide green bins for food and yard waste. Exclude plastics, glass, and synthetic liners. In regions without municipal service, establish backyard composters that comply with local wildlife ordinances."
+  },
+  "e-waste": {
+    "type": "Electronics",
+    "dispose": "Never place electronics in household trash. Deliver devices to certified e-waste recyclers or manufacturer take-back events where hazardous components are safely handled.",
+    "reduce": [
+      "Extend device lifespan with repairs, OS updates, and component upgrades.",
+      "Choose modular, repairable gadgets vetted by right-to-repair scores.",
+      "Share seldom-used electronics through tool libraries or rental platforms.",
+      "Adopt cloud or thin-client solutions to reduce redundant hardware.",
+      "Purchase refurbished equipment with warranty support."
+    ],
+    "reuse": [
+      "Donate working laptops or tablets to schools, shelters, or mutual-aid groups.",
+      "Convert old smartphones into security cameras or baby monitors.",
+      "Use outdated tablets as smart home dashboards or recipe stations.",
+      "Harvest components like fans, LEDs, or speakers for maker projects.",
+      "Turn circuit boards into art pieces, jewelry, or educational displays."
+    ],
+    "recycle_ideas": [
+      "Disassemble keyboards for keycap mosaics or typography art.",
+      "Use copper wire from power cords in sculptural projects.",
+      "Embed hard-drive platters in mirrors or kinetic mobiles.",
+      "Upcycle motherboard fragments into coasters with epoxy resin.",
+      "Repurpose sturdy casings as enclosures for DIY electronics."
+    ],
+    "environmental_impact": "Electronics contain toxic metals, flame retardants, and precious resources. Improper disposal contaminates soil and water, while responsible recycling recovers valuable copper, gold, and rare earth elements.",
+    "local_rules": "Many jurisdictions mandate e-waste recycling. Locate certified R2 or e-Stewards facilities, wipe data before drop-off, and follow manufacturer mail-back instructions when offered."
+  }
+}
+
