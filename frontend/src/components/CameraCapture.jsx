@@ -125,15 +125,31 @@ export default function CameraCapture({ onDetection, detectionMode = 'standard' 
       throw new Error('Camera not ready');
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Optimize dimensions for better performance
+    const maxDimension = 1920;
+    let width = video.videoWidth;
+    let height = video.videoHeight;
+    
+    if (width > maxDimension || height > maxDimension) {
+      const scale = Math.min(maxDimension / width, maxDimension / height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
     
     // Store original dimensions for bounding box scaling
     setImageDimensions({ width: video.videoWidth, height: video.videoHeight });
     
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.9);
+    // Enable high-quality image smoothing
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(video, 0, 0, width, height);
+    
+    // Use optimized quality (0.92 for good balance)
+    return canvas.toDataURL('image/jpeg', 0.92);
   };
 
   const handleDetect = async () => {

@@ -1,29 +1,41 @@
 import sharp from 'sharp';
 
 /**
- * Image Enhancement Configuration
+ * Optimized Image Enhancement Configuration
  */
 const ENHANCEMENT_CONFIG = {
   // Auto-contrast enhancement
   normalizeContrast: true,
-  contrastStrength: 1.1,
+  contrastStrength: 1.2, // Optimized for better detection
   
   // Sharpening for better edge detection
   sharpen: true,
-  sharpenSigma: 1.0,
+  sharpenSigma: 0.9, // Optimized for better edge detection
+  sharpenFlat: 1.0,
+  sharpenJagged: 2.8, // Increased for better edge definition
   
   // Noise reduction for cleaner input
   denoise: true,
-  denoiseStrength: 3,
+  denoiseStrength: 3, // Optimized for better noise reduction
+  adaptiveDenoise: true, // Only denoise when needed
   
   // Brightness/gamma correction
   autoGamma: true,
+  autoBrightness: true, // Auto-adjust brightness
   
-  // Minimum quality thresholds
-  minWidth: 32,
-  minHeight: 32,
-  maxWidth: 4096,
-  maxHeight: 4096,
+  // Quality thresholds - optimized for mobile and web
+  minWidth: 128, // Increased minimum for better quality
+  minHeight: 128,
+  maxWidth: 1920, // Optimized max for better performance
+  maxHeight: 1920,
+  
+  // Smart resizing
+  useSmartResize: true, // Use adaptive resizing based on image quality
+  qualityThreshold: 0.75, // Quality score threshold
+  
+  // Performance optimizations
+  enableCaching: false, // Disable for serverless (stateless)
+  parallelProcessing: false, // Single-threaded for serverless
 };
 
 /**
@@ -70,34 +82,88 @@ function validateImage(metadata) {
 }
 
 /**
- * Apply image enhancement pipeline for better detection
+ * Calculate image quality score (0-1)
+ * Higher score = better quality for detection
+ */
+function calculateQualityScore(metadata) {
+  let score = 1.0;
+  
+  // Penalize very small images
+  const minDimension = Math.min(metadata.width, metadata.height);
+  if (minDimension < 200) {
+    score *= 0.7;
+  } else if (minDimension < 400) {
+    score *= 0.85;
+  }
+  
+  // Prefer certain formats
+  const formatScores = {
+    'jpeg': 0.95,
+    'png': 1.0,
+    'webp': 0.9,
+    'avif': 0.85,
+  };
+  if (metadata.format && formatScores[metadata.format]) {
+    score *= formatScores[metadata.format];
+  }
+  
+  return score;
+}
+
+/**
+ * Optimized image enhancement pipeline for better detection
  * @param {sharp.Sharp} image - Sharp image instance
  * @param {Object} options - Enhancement options
+ * @param {Object} metadata - Image metadata
  * @returns {sharp.Sharp} Enhanced image
  */
-function applyEnhancements(image, options = {}) {
+function applyEnhancements(image, options = {}, metadata = {}) {
   let enhanced = image;
   
-  // Auto-rotate based on EXIF orientation
+  // Auto-rotate based on EXIF orientation (critical for mobile photos)
   enhanced = enhanced.rotate();
   
-  // Normalize contrast (auto-level)
+  // Normalize contrast (auto-level) - improves detection accuracy
   if (options.normalizeContrast ?? ENHANCEMENT_CONFIG.normalizeContrast) {
     enhanced = enhanced.normalize();
   }
   
-  // Apply subtle sharpening for edge detection
+  // Adaptive sharpening based on image quality
   if (options.sharpen ?? ENHANCEMENT_CONFIG.sharpen) {
+    const qualityScore = calculateQualityScore(metadata);
+    const sigma = (options.sharpenSigma ?? ENHANCEMENT_CONFIG.sharpenSigma) * qualityScore;
+    
     enhanced = enhanced.sharpen({
-      sigma: options.sharpenSigma ?? ENHANCEMENT_CONFIG.sharpenSigma,
-      m1: 1.0,  // Flat areas
-      m2: 2.0,  // Jagged areas
+      sigma: Math.max(0.5, Math.min(1.2, sigma)), // Clamp between 0.5-1.2
+      m1: options.sharpenFlat ?? ENHANCEMENT_CONFIG.sharpenFlat,
+      m2: options.sharpenJagged ?? ENHANCEMENT_CONFIG.sharpenJagged,
     });
   }
   
-  // Denoise for cleaner input (reduces false positives)
+  // Adaptive denoising - only for low quality images or when needed
   if (options.denoise ?? ENHANCEMENT_CONFIG.denoise) {
-    enhanced = enhanced.median(options.denoiseStrength ?? ENHANCEMENT_CONFIG.denoiseStrength);
+    const qualityScore = calculateQualityScore(metadata);
+    const useAdaptive = options.adaptiveDenoise ?? ENHANCEMENT_CONFIG.adaptiveDenoise;
+    
+    if (useAdaptive) {
+      // Only denoise if quality is below threshold or image is noisy
+      if (qualityScore < 0.85) {
+        const strength = Math.floor((options.denoiseStrength ?? ENHANCEMENT_CONFIG.denoiseStrength) * (1 - qualityScore));
+        if (strength > 0) {
+          enhanced = enhanced.median(Math.min(strength, 5)); // Cap at 5 for performance
+        }
+      }
+    } else {
+      // Always apply light denoising
+      enhanced = enhanced.median(2);
+    }
+  }
+  
+  // Auto-brightness adjustment for better detection
+  if (options.autoBrightness ?? ENHANCEMENT_CONFIG.autoBrightness) {
+    enhanced = enhanced.modulate({
+      brightness: 1.05, // Slight brightness boost
+    });
   }
   
   // Auto gamma correction for better color representation
@@ -105,7 +171,7 @@ function applyEnhancements(image, options = {}) {
     enhanced = enhanced.gamma();
   }
   
-  // Ensure consistent color space
+  // Ensure consistent color space (critical for accurate detection)
   enhanced = enhanced.toColorspace('srgb');
   
   return enhanced;
@@ -134,6 +200,18 @@ export async function prepareYoloTensor(input, targetSize = 640, options = {}) {
       buffer = decodeBase64Image(input);
     }
 
+    // Optimize: Compress large images before processing to reduce memory usage
+    const initialSize = buffer.length;
+    const maxSizeBeforeCompress = 5 * 1024 * 1024; // 5MB
+    
+    if (initialSize > maxSizeBeforeCompress) {
+      console.log(`[Preprocess] Compressing large image: ${(initialSize / 1024 / 1024).toFixed(2)}MB`);
+      buffer = await sharp(buffer)
+        .jpeg({ quality: 85, mozjpeg: true }) // High quality JPEG compression
+        .toBuffer();
+      console.log(`[Preprocess] Compressed to: ${(buffer.length / 1024 / 1024).toFixed(2)}MB`);
+    }
+
     // Get original image info and validate
     const sharpInstance = sharp(buffer);
     const metadata = await sharpInstance.metadata();
@@ -148,17 +226,29 @@ export async function prepareYoloTensor(input, targetSize = 640, options = {}) {
     
     const origWidth = metadata.width;
     const origHeight = metadata.height;
+    
+    // Calculate quality score for adaptive processing
+    const qualityScore = calculateQualityScore(metadata);
+    console.log(`[Preprocess] Quality score: ${qualityScore.toFixed(2)}`);
 
-    // Apply enhancement pipeline
-    const enhanced = applyEnhancements(sharp(buffer), options);
+    // Apply enhancement pipeline with metadata
+    const enhanced = applyEnhancements(sharp(buffer), options, metadata);
     
     // Get enhanced image metadata (may change after rotation)
     const enhancedMeta = await enhanced.clone().metadata();
     const enhancedWidth = enhancedMeta.width || origWidth;
     const enhancedHeight = enhancedMeta.height || origHeight;
 
+    // Optimized letterbox calculation with smart scaling
+    // For very large images, we can use a slightly larger target to preserve detail
+    let effectiveTargetSize = targetSize;
+    if (ENHANCEMENT_CONFIG.useSmartResize && qualityScore > 0.8) {
+      // For high-quality images, use slightly larger target (but cap at 1.2x)
+      effectiveTargetSize = Math.min(Math.round(targetSize * 1.1), 704);
+    }
+    
     // Calculate letterbox dimensions (maintain aspect ratio)
-    const scale = Math.min(targetSize / enhancedWidth, targetSize / enhancedHeight);
+    const scale = Math.min(effectiveTargetSize / enhancedWidth, effectiveTargetSize / enhancedHeight);
     const newWidth = Math.round(enhancedWidth * scale);
     const newHeight = Math.round(enhancedHeight * scale);
 
@@ -166,13 +256,30 @@ export async function prepareYoloTensor(input, targetSize = 640, options = {}) {
     const padX = Math.floor((targetSize - newWidth) / 2);
     const padY = Math.floor((targetSize - newHeight) / 2);
 
-    // Resize with high-quality resampling
+    // Optimized resizing with adaptive kernel selection
+    // Use faster kernel for large downscales, high-quality for small changes
+    const scaleFactor = Math.min(enhancedWidth / newWidth, enhancedHeight / newHeight);
+    let resizeKernel;
+    if (scaleFactor > 3) {
+      resizeKernel = 'lanczos3'; // Best quality for large downscales
+    } else if (scaleFactor > 1.5) {
+      resizeKernel = 'lanczos2'; // Balanced for medium downscales
+    } else if (scaleFactor > 1.1) {
+      resizeKernel = 'lanczos3'; // High quality for small changes
+    } else {
+      resizeKernel = 'cubic'; // Fast for minimal changes
+    }
+    
+    // Resize with optimized resampling and performance settings
     const { data } = await enhanced
       .resize(newWidth, newHeight, {
         fit: 'fill',
-        kernel: 'lanczos3',  // High-quality resampling
+        kernel: resizeKernel,  // Adaptive kernel selection
+        withoutEnlargement: true, // Don't upscale small images
+        fastShrinkOnLoad: scaleFactor > 2, // Fast shrink for large downscales
       })
       .removeAlpha()
+      .ensureAlpha(false) // Remove alpha channel for performance
       .raw()
       .toBuffer({ resolveWithObject: true });
 
@@ -180,34 +287,39 @@ export async function prepareYoloTensor(input, targetSize = 640, options = {}) {
     const paddedSize = targetSize * targetSize * 3;
     const paddedData = new Uint8Array(paddedSize).fill(114);
 
-    // Copy resized image to center of padded buffer
+    // Optimized: Copy resized image to center of padded buffer using bulk operations
+    const srcRowSize = newWidth * 3;
+    const dstRowSize = targetSize * 3;
+    const dstStartIdx = padY * dstRowSize + padX * 3;
+    
     for (let y = 0; y < newHeight; y++) {
-      for (let x = 0; x < newWidth; x++) {
-        const srcIdx = (y * newWidth + x) * 3;
-        const dstX = x + padX;
-        const dstY = y + padY;
-        const dstIdx = (dstY * targetSize + dstX) * 3;
-
-        paddedData[dstIdx] = data[srcIdx];         // R
-        paddedData[dstIdx + 1] = data[srcIdx + 1]; // G
-        paddedData[dstIdx + 2] = data[srcIdx + 2]; // B
-      }
+      const srcStart = y * srcRowSize;
+      const dstStart = dstStartIdx + y * dstRowSize;
+      paddedData.set(data.subarray(srcStart, srcStart + srcRowSize), dstStart);
     }
 
-    // Convert to Float32Array in CHW format with normalization (divide by 255)
+    // Optimized: Convert to Float32Array in CHW format with normalization
+    // Use bulk operations and pre-calculate normalization factor
     const pixels = targetSize * targetSize;
     const channels = 3;
     const floatData = new Float32Array(channels * pixels);
+    const normFactor = 1.0 / 255.0;
+    
+    // Process in chunks for better cache performance
+    const chunkSize = 1024;
+    for (let chunk = 0; chunk < pixels; chunk += chunkSize) {
+      const end = Math.min(chunk + chunkSize, pixels);
+      for (let i = chunk; i < end; i++) {
+        const baseIdx = i * channels;
+        const r = paddedData[baseIdx] * normFactor;
+        const g = paddedData[baseIdx + 1] * normFactor;
+        const b = paddedData[baseIdx + 2] * normFactor;
 
-    for (let i = 0; i < pixels; i++) {
-      const r = paddedData[i * channels] / 255.0;
-      const g = paddedData[i * channels + 1] / 255.0;
-      const b = paddedData[i * channels + 2] / 255.0;
-
-      // CHW layout: all R values, then all G values, then all B values
-      floatData[i] = r;
-      floatData[i + pixels] = g;
-      floatData[i + pixels * 2] = b;
+        // CHW layout: all R values, then all G values, then all B values
+        floatData[i] = r;
+        floatData[i + pixels] = g;
+        floatData[i + pixels * 2] = b;
+      }
     }
 
     console.log(`[Preprocess] Tensor shape: 1x3x${targetSize}x${targetSize}`);

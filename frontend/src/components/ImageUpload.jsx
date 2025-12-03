@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { classifyWaste } from '../services/api.js';
 import { drawBoundingBoxes, createResizeObserver } from '../utils/drawBoundingBoxes.js';
+import { optimizeImageForUpload } from '../utils/imageOptimization.js';
 
 export default function ImageUpload({ onDetection, detectionMode = 'standard' }) {
   const [dragActive, setDragActive] = useState(false);
@@ -140,7 +141,22 @@ export default function ImageUpload({ onDetection, detectionMode = 'standard' })
     setDetections([]);
     
     try {
-      const response = await classifyWaste(preview, detectionMode);
+      // Optimize image before sending (compress if needed)
+      let optimizedImage = preview;
+      if (inputRef.current?.files?.[0]) {
+        try {
+          optimizedImage = await optimizeImageForUpload(inputRef.current.files[0], {
+            maxWidth: 1920,
+            maxHeight: 1920,
+            quality: 0.9, // High quality for detection
+          });
+        } catch (optError) {
+          console.warn('Image optimization failed, using original:', optError);
+          // Fallback to original if optimization fails
+        }
+      }
+      
+      const response = await classifyWaste(optimizedImage, detectionMode);
       
       // Extract detections with bounding boxes
       const boxes = (response.insights || []).map((insight) => ({

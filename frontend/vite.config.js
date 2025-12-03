@@ -107,17 +107,34 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'vite-pwa': ['workbox-window'],
+        manualChunks: (id) => {
+          // More granular code splitting
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('workbox')) {
+              return 'vite-pwa';
+            }
+            // Split other large dependencies
+            return 'vendor';
+          }
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
       },
+      treeshake: {
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+      },
     },
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 800, // Reduced warning threshold
     reportCompressedSize: true,
+    // Optimize chunk size
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
   },
   server: {
     port: 5173,
