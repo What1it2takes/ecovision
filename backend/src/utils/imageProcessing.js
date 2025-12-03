@@ -278,8 +278,7 @@ export async function prepareYoloTensor(input, targetSize = 640, options = {}) {
         withoutEnlargement: true, // Don't upscale small images
         fastShrinkOnLoad: scaleFactor > 2, // Fast shrink for large downscales
       })
-      .removeAlpha()
-      .ensureAlpha(false) // Remove alpha channel for performance
+      .removeAlpha() // Remove alpha channel for performance
       .raw()
       .toBuffer({ resolveWithObject: true });
 
