@@ -286,15 +286,30 @@ export async function prepareYoloTensor(input, targetSize = 640, options = {}) {
     const paddedSize = targetSize * targetSize * 3;
     const paddedData = new Uint8Array(paddedSize).fill(114);
 
-    // Optimized: Copy resized image to center of padded buffer using bulk operations
-    const srcRowSize = newWidth * 3;
-    const dstRowSize = targetSize * 3;
-    const dstStartIdx = padY * dstRowSize + padX * 3;
+    // Safer: Copy resized image to center of padded buffer (pixel by pixel with bounds checking)
+    const expectedDataSize = newWidth * newHeight * 3;
     
+    // Validate data size
+    if (data.length !== expectedDataSize) {
+      console.warn(`[Preprocess] Data size mismatch: expected ${expectedDataSize}, got ${data.length}. Using safe copy.`);
+    }
+    
+    // Copy pixel by pixel with bounds checking
     for (let y = 0; y < newHeight; y++) {
-      const srcStart = y * srcRowSize;
-      const dstStart = dstStartIdx + y * dstRowSize;
-      paddedData.set(data.subarray(srcStart, srcStart + srcRowSize), dstStart);
+      for (let x = 0; x < newWidth; x++) {
+        const srcIdx = (y * newWidth + x) * 3;
+        const dstX = x + padX;
+        const dstY = y + padY;
+        const dstIdx = (dstY * targetSize + dstX) * 3;
+        
+        // Bounds checking for both source and destination
+        if (srcIdx + 2 < data.length && dstIdx + 2 < paddedData.length && 
+            dstX < targetSize && dstY < targetSize) {
+          paddedData[dstIdx] = data[srcIdx];         // R
+          paddedData[dstIdx + 1] = data[srcIdx + 1]; // G
+          paddedData[dstIdx + 2] = data[srcIdx + 2]; // B
+        }
+      }
     }
 
     // Optimized: Convert to Float32Array in CHW format with normalization
