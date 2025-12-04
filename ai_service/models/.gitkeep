@@ -1,0 +1,4 @@
+# Place model files here:
+# - yolov10e.pt (YOLOv10-E model)
+# - sam2.pt (SAM2 checkpoint)
+

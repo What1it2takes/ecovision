@@ -1,0 +1,39 @@
+# FastAPI and server dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+pydantic==2.5.0
+
+# YOLOv10-E and YOLOv8 dependencies
+ultralytics>=8.1.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# YOLOv10 support (if using official YOLOv10)
+# Uncomment if using official YOLOv10 repository:
+# git+https://github.com/THU-MIG/yolov10.git
+
+# SAM2 dependencies
+# Official SAM2 (if available)
+# git+https://github.com/facebookresearch/segment-anything-2.git
+
+# Alternative: SAM v1 (fallback)
+segment-anything>=1.0
+
+# Image processing
+Pillow>=10.0.0
+numpy>=1.24.0
+opencv-python>=4.8.0
+
+# Utilities
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+requests>=2.31.0
+
+# Optional: For better performance
+# onnxruntime-gpu>=1.16.0  # If using ONNX models
+# tensorrt>=8.6.0  # NVIDIA TensorRT for optimization
+
